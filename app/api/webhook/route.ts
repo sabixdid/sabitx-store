@@ -1,20 +1,20 @@
-import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
-export const config = {
-  api: { bodyParser: false },
-};
+export const runtime = "nodejs";
+export const preferredRegion = "iad1";
+export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
-  const body = await req.text();
-  const sig = req.headers.get("stripe-signature")!;
-
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: "2023-08-16",
-  });
-
   try {
+    const body = await req.text();
+    const sig = req.headers.get("stripe-signature")!;
+
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+      apiVersion: "2023-08-16",
+    });
+
     const event = stripe.webhooks.constructEvent(
       body,
       sig,
@@ -22,18 +22,17 @@ export async function POST(req: Request) {
     );
 
     if (event.type === "checkout.session.completed") {
-      const s = event.data.object as any;
+      const session = event.data.object as any;
 
-      // Update order status
       await supabase
         .from("orders")
         .update({ status: "PAID" })
-        .eq("session_id", s.id);
+        .eq("session_id", session.id);
     }
 
     return NextResponse.json({ received: true });
-  } catch (err) {
-    console.error(err);
+  } catch (err: any) {
+    console.error("Webhook error:", err.message);
     return NextResponse.json({ error: "Webhook error" }, { status: 400 });
   }
 }

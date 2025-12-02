@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase-client"; // client version
+import { supabase } from "@/lib/supabase-client"; // correct
 
-export default function Admin() {
+export default function AdminPage() {
   const [orders, setOrders] = useState<any[]>([]);
 
-  async function load() {
+  async function loadOrders() {
     const { data } = await supabase
       .from("orders")
       .select("*")
@@ -16,35 +16,30 @@ export default function Admin() {
   }
 
   useEffect(() => {
-    load();
+    loadOrders();
 
     const channel = supabase
       .channel("orders")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "orders" },
-        load
+        loadOrders
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => channel.unsubscribe();
   }, []);
 
   return (
-    <main className="bg-black text-white min-h-screen p-6">
-      <h1 className="text-2xl font-semibold mb-6">Operator Dashboard</h1>
+    <main className="bg-black text-white min-h-screen p-8">
+      <h1 className="text-2xl mb-6">Operator Dashboard</h1>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {orders.map((o) => (
-          <div
-            key={o.id}
-            className="p-4 bg-zinc-900 rounded-xl border border-zinc-800"
-          >
-            <div className="text-lg">{o.items[0].item}</div>
+          <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-xl" key={o.id}>
+            <div>{o.items[0].item}</div>
             <div className="text-zinc-400">{o.location}</div>
-            <div className="text-green-400 mt-2">{o.status}</div>
+            <div className="text-green-400">{o.status}</div>
           </div>
         ))}
       </div>
