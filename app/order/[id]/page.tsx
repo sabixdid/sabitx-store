@@ -1,22 +1,20 @@
 import { supabase } from "@/lib/supabase";
 
-export default async function OrderStatusPage({ params }: any) {
-  const { id } = params;
-
+export default async function OrderStatus({ params }: any) {
   const { data } = await supabase
     .from("orders")
     .select("*")
-    .eq("session_id", id)
+    .eq("session_id", params.id)
     .single();
 
   return (
     <main className="bg-black text-white min-h-screen p-6">
-      <h1 className="text-xl font-semibold mb-4">Order #{id}</h1>
+      <h1 className="text-xl font-semibold mb-4">Order Status</h1>
 
       {data ? (
         <>
-          <p>Status: <span className="text-green-400">{data.status}</span></p>
-          <p className="text-zinc-400 mt-2">Location: {data.location}</p>
+          <p>Order ID: {params.id}</p>
+          <p>Status: {data.status}</p>
         </>
       ) : (
         <p className="text-red-400">Order not found.</p>

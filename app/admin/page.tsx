@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase-client"; // correct
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase-client";
 
 export default function AdminPage() {
   const [orders, setOrders] = useState<any[]>([]);
@@ -11,7 +11,6 @@ export default function AdminPage() {
       .from("orders")
       .select("*")
       .order("created_at", { ascending: false });
-
     setOrders(data || []);
   }
 
@@ -23,21 +22,23 @@ export default function AdminPage() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "orders" },
-        loadOrders
+        (payload) => loadOrders()
       )
       .subscribe();
 
-    return () => channel.unsubscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return (
-    <main className="bg-black text-white min-h-screen p-8">
-      <h1 className="text-2xl mb-6">Operator Dashboard</h1>
+    <main className="bg-black text-white min-h-screen p-6">
+      <h1 className="text-2xl font-semibold mb-6">Operator Dashboard</h1>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {orders.map((o) => (
-          <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-xl" key={o.id}>
-            <div>{o.items[0].item}</div>
+          <div key={o.id} className="p-4 bg-zinc-900 rounded-xl border border-zinc-800">
+            <div className="text-lg">{o.items[0].item}</div>
             <div className="text-zinc-400">{o.location}</div>
             <div className="text-green-400">{o.status}</div>
           </div>

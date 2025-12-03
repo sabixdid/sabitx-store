@@ -1,52 +1,40 @@
-import { NextResponse } from "next/server";
-import Stripe from "stripe";
-import { supabase } from "@/lib/supabase";
+"use client";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2023-08-16",
-});
+import { useSearchParams } from "next/navigation";
 
-export async function POST(req: Request) {
-  const { item, location } = await req.json();
+export default function CheckoutPage() {
+  const params = useSearchParams();
+  const item = params.get("item");
+  const location = params.get("location");
 
-  // TEMP menu mapping
-  const priceMap: Record<string, number> = {
-    pizza: 399,
-    drink: 199,
-    wings: 899,
-    fries: 299,
-  };
+  async function handleCheckout() {
+    const res = await fetch("/api/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ item, location }),
+    });
 
-  const price = priceMap[item];
+    const { url } = await res.json();
+    window.location.href = url;
+  }
 
-  const session = await stripe.checkout.sessions.create({
-    mode: "payment",
-    line_items: [
-      {
-        price_data: {
-          currency: "usd",
-          product_data: { name: `${item} @ ${location}` },
-          unit_amount: price,
-        },
-        quantity: 1,
-      },
-    ],
-    success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/order/{CHECKOUT_SESSION_ID}`,
-    cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/checkout?item=${item}&location=${location}`,
-    metadata: {
-      item,
-      location,
-    },
-  });
+  return (
+    <main className="bg-black text-white min-h-screen p-6">
+      <h1 className="text-xl font-semibold mb-4">Checkout</h1>
 
-  // Create placeholder order
-  await supabase.from("orders").insert({
-    session_id: session.id,
-    location,
-    items: [{ item, price }],
-    amount: price,
-    status: "PENDING",
-  });
+      <p className="text-zinc-400">
+        Item: <strong>{item}</strong>
+      </p>
+      <p className="text-zinc-400">
+        Location: <strong>{location}</strong>
+      </p>
 
-  return NextResponse.json({ url: session.url });
+      <button
+        onClick={handleCheckout}
+        className="mt-4 px-4 py-2 rounded-lg bg-green-600"
+      >
+        Proceed to Payment
+      </button>
+    </main>
+  );
 }
