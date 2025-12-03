@@ -8,7 +8,8 @@ export default function CheckoutPage() {
   const location = params.get("location");
 
   async function handleCheckout() {
-    const res = await fetch("/api/checkout", {
+    const res = await fetch("/api/create-checkout", {
+
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ item, location }),
