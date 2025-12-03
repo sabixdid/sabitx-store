@@ -1,15 +1,15 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const params = useSearchParams();
   const item = params.get("item");
   const location = params.get("location");
 
   async function handleCheckout() {
     const res = await fetch("/api/create-checkout", {
-
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ item, location }),
@@ -38,5 +38,13 @@ export default function CheckoutPage() {
         Proceed to Payment
       </button>
     </main>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<p className="text-white p-6">Loading…</p>}>
+      <CheckoutContent />
+    </Suspense>
   );
 }
