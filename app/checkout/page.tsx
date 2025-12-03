@@ -25,6 +25,7 @@ export default function CheckoutPage() {
       <p className="text-zinc-400">
         Item: <strong>{item}</strong>
       </p>
+
       <p className="text-zinc-400">
         Location: <strong>{location}</strong>
       </p>
